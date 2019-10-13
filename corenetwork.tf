@@ -1,16 +1,24 @@
 resource "azurerm_resource_group" "coretf" {
-    name = "corenetwork"
+    name = "corersg"
     location = "${var.loc}"
     tags = "${var.tags}"
 
      
 }
 resource "azurerm_virtual_network" "core" {
-  name                = "core"
+  name                = "corevnet"
   location            = "${var.loc}"
   resource_group_name = "${azurerm_resource_group.coretf.name}"
   address_space       = ["10.0.0.0/16"]
   dns_servers         = ["1.1.1.1","1.0.0.1"]
+}
+
+resource "azurerm_public_ip" "vpnGatewayPublicIp" {
+  name = "vpnpublicip"
+  location = "${var.loc}"
+  tags = "${var.tags}"
+  resource_group_name = "${azurerm_resource_group.coretf.name}"
+  public_ip_address_allocation = "Dynamic"
 }
 
 resource "azurerm_subnet" "Gatewaysubnet" {
@@ -34,13 +42,7 @@ resource "azurerm_subnet" "training" {
   address_prefix       = "10.0.2.0/24"
 }
 
-resource "azurerm_public_ip" "vpnGatewayPublicIp" {
-  name = "vpnGatewayPublicIp"
-  location = "${var.loc}"
-  tags = "${var.tags}"
-  resource_group_name = "${azurerm_resource_group.coretf.name}"
-  allocation_method = "Dynamic"
-}
+
 
 resource "azurerm_virtual_network_gateway" "vpnGateway" {
   name = "vpnGateway"
@@ -53,7 +55,7 @@ resource "azurerm_virtual_network_gateway" "vpnGateway" {
   sku = "Basic"
 
   ip_configuration {
-      name = "vpnGwConfig1"
+      name = "vpnGwConfig"
       public_ip_address_id = "${azurerm_public_ip.vpnGatewayPublicIp.id}"
       private_ip_address_allocation = "Dynamic"
       subnet_id = "${azurerm_subnet.Gatewaysubnet.id}"
